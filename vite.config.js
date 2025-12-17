@@ -5,5 +5,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: "/csv-generator-app/",
+  build: {
+      outDir: "docs",
+      emptyOutDir: true,
+    },
+
 })
 
