@@ -3,6 +3,7 @@ import { generateD0155File } from "./d0155";
 import { generateD0148File } from "./d0148";
 import { downloadTextFile } from "../utils/fileprep";
 import { isValidSenderMpid } from "../utils/validate";
+import { generateMpan, gspFromMpan } from "../utils/industry";
 
 export const FLOW_PLANS = {
   "D0155": ["D0155"],
@@ -23,11 +24,13 @@ export function handleGenerateFlow({ senderMpid, recipientMpid, contractRef, ret
   }
 
   const flowsToGenerate = FLOW_PLANS[flowName] || [];
-  console.log('flows to generate:', flowsToGenerate)
+  const mpan =  generateMpan();
+  const gspGroup = gspFromMpan(mpan);
+  console.log('flows to generate for mpan:',mpan, '-->', flowsToGenerate)
   flowsToGenerate.forEach(flow => {
     const generator = GENERATORS[flow];   
     if (!generator) return;
-    const { filename, csvText } = generator({ senderMpid, recipientMpid, contractRef, retrievalMethod });
+    const { filename, csvText } = generator({mpan, gspGroup, senderMpid, recipientMpid, contractRef, retrievalMethod });
     console.log('downloading ', filename)
     downloadTextFile(filename, csvText);
   });

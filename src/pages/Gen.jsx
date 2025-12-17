@@ -1,10 +1,8 @@
 
 import { useMemo, useState } from "react";
 import {  pad } from "../utils/date";
-import { generateMpan, gspFromMpan } from "../utils/industry";
 import {  nextFileId, randomInt, randomPastDateYYYYMMDD, randomRef } from "../utils/random";
 import { isValidSenderMpid, normalizeInput } from "../utils/validate";
-// import { buildCsvText, buildPipeLine, downloadTextFile } from "../utils/fileprep";
 import { handleGenerateFlow } from "../generators";
 
 export default function Gen() {
@@ -18,18 +16,15 @@ export default function Gen() {
   const [retrievalMethod, setRetrievalMethod] = useState("H"); // 'H', 'R', 'S'
 
   // ephemeral values for preview (regenerate per render)
-  const mpan = useMemo(() => generateMpan(), []);
   const regEffective = useMemo(() => randomPastDateYYYYMMDD(180, 1500), []);
   const mopStart = useMemo(() => randomPastDateYYYYMMDD(60, 900), []);
   const serviceRef = useMemo(() => randomRef(4), []);
   const serviceLevelRef = useMemo(() => pad(randomInt(1, 9999), 4), []);
-  const gspGroup = useMemo(() => gspFromMpan(mpan), [mpan]);
   const FILE_COUNTER_KEY = "csv_file_counter";
-
+  
   // Build + download on submit
   const handleGenerate = (e) => {
-    e.preventDefault();
-
+      e.preventDefault();
     console.log('generating')
     
     const result = handleGenerateFlow({
@@ -220,9 +215,10 @@ export default function Gen() {
 
       {/* Preview (optional)—helps verify values before download */}
       <div style={{ marginTop: 20, fontSize: 14, color: "#444" }}>
-        <h3 style={{ margin: 0 }}>Preview of generated values</h3>
+        <h3 style={{ margin: 0 }}>Preview of generated/used values</h3>
         <ul style={{ marginTop: 8, lineHeight: 1.6 }}>
-          <li>MPAN: <code>{mpan}</code> (GSP: <code>{gspGroup}</code>)</li>
+          <li>Sender MPID: <code>{senderMpid}</code></li>
+          <li>Recipient MPID: <code>{recipientMpid}</code></li>
           <li>Registration Effective Date (REGI EFD): <code>{regEffective}</code></li>
           <li>MOP appointment start date: <code>{mopStart}</code></li>
           <li>Service reference / level: <code>{serviceRef}</code> / <code>{serviceLevelRef}</code></li>

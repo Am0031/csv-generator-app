@@ -1,16 +1,13 @@
 
 import { nowTimestampYYYYMMDDHHmmss, pad } from "../utils/date";
-import { generateMpan, gspFromMpan } from "../utils/industry";
 import { nextFileId, randomInt, randomPastDateYYYYMMDD, randomRef, address, postcode } from "../utils/random";
-import { buildCsvText, buildPipeLine, downloadTextFile } from "../utils/fileprep";
+import { buildCsvText, buildPipeLine } from "../utils/fileprep";
 
-export function generateD0155File({ senderMpid, recipientMpid, contractRef, retrievalMethod }) {
-  const mpan = generateMpan();
+export function generateD0155File({mpan, gspGroup, senderMpid, recipientMpid, contractRef, retrievalMethod }) {
   const regEffective = randomPastDateYYYYMMDD(180, 1500);
   const mopStart = randomPastDateYYYYMMDD(60, 900);
   const serviceRef = randomRef(4);
   const serviceLevelRef = pad(randomInt(1, 9999), 4);
-  const gspGroup = gspFromMpan(mpan);
 
   const fileId = nextFileId();
   const nowTs = nowTimestampYYYYMMDDHHmmss();
@@ -35,6 +32,5 @@ export function generateD0155File({ senderMpid, recipientMpid, contractRef, retr
   const csvText = buildCsvText(lines);
 
   const filename = `D0155-${mpan}-${nowTs}.csv`;
-  downloadTextFile(filename, csvText);
   return { filename, csvText };
 }
