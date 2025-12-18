@@ -3,9 +3,9 @@ import { nowTimestampYYYYMMDDHHmmss } from "../utils/date";
 import { nextFileId } from "../utils/random";
 import { buildCsvText, buildPipeLine } from "../utils/fileprep";
 
-export function generateD0148File({mpan, gspGroup, senderMpid, recipientMpid }) {
-  const fileRef = 'D0148';
-  
+export function generateD0268File({mpan, gspGroup, senderMpid, recipientMpid }) {
+  const fileRef = 'D0268';
+
   //Dummy content - TODO: replace with actual logic
   const fileId = nextFileId();
   const nowTs = nowTimestampYYYYMMDDHHmmss();

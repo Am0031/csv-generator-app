@@ -1,41 +1,60 @@
 
-import { useMemo, useState } from "react";
-import {  pad } from "../utils/date";
-import {  nextFileId, randomInt, randomPastDateYYYYMMDD, randomRef } from "../utils/random";
+import { useReducer, useState } from "react";
+import {  nextFileId } from "../utils/random";
 import { isValidSenderMpid, normalizeInput } from "../utils/validate";
 import { handleGenerateFlow } from "../generators";
+import { FLOW_PLANS } from "../constants/constants";
+import { ToggleSwitch } from "../components/Toggle";
+
+
+const initialState = {
+  senderMpid: "BIZZ",
+  recipientMpid: "SIEM",
+  flowName: "D0155",
+  contractRef: "BIZZNHMO",
+  retrievalMethod: "H",
+};
+function reducer(state, action) {
+switch (action.type) {
+  case "SET_FIELD":
+    return { ...state, [action.field]: action.value };
+  case "SET_FLOW":
+    { const defaults = action.applyDefaults ? (FLOW_PLANS[action.value]?.defaultValues || {}) : {};
+    return { ...state, flowName: action.value, ...defaults }; }
+  case "APPLY_DEFAULTS":
+    return { ...state, ...action.defaults };
+  case "RESET":
+    return initialState;
+  default:
+    return state;
+  }
+}
 
 export default function Gen() {
-  // Inputs from user
-  const [senderMpid, setSenderMpid] = useState("BIZZ"); // keep your default if you like
-  const [senderError, setSenderError] = useState("");
-  const [recipientMpid, setRecipientMpid] = useState("SIEM"); // 'SIEM' or 'ELEC'
-  const [flowName, setFlowName] = useState("D0155"); // flow name; version fixed '001'
-  const [contractRef, setContractRef] = useState("BIZZNHMO"); 
-  const [contractDirty, setContractDirty] = useState(false);
-  const [retrievalMethod, setRetrievalMethod] = useState("H"); // 'H', 'R', 'S'
 
-  // ephemeral values for preview (regenerate per render)
-  const regEffective = useMemo(() => randomPastDateYYYYMMDD(180, 1500), []);
-  const mopStart = useMemo(() => randomPastDateYYYYMMDD(60, 900), []);
-  const serviceRef = useMemo(() => randomRef(4), []);
-  const serviceLevelRef = useMemo(() => pad(randomInt(1, 9999), 4), []);
+  //state management
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [isEditable, setIsEditable] = useState(false)
+
+  //field errors
+  const [senderError, setSenderError] = useState("");
+
   const FILE_COUNTER_KEY = "csv_file_counter";
   
+  
+  const handleToggleEdit = (checked) => {
+    setIsEditable(checked);
+    if (!checked) {
+      const flowDefaults = FLOW_PLANS[state.flowName]?.defaultValues || {};
+      dispatch({ type: "APPLY_DEFAULTS", defaults: flowDefaults });
+    }
+  };
+
   // Build + download on submit
   const handleGenerate = (e) => {
-      e.preventDefault();
-    console.log('generating')
-    
-    const result = handleGenerateFlow({
-        senderMpid,
-        recipientMpid,
-        contractRef,
-        retrievalMethod,
-        flowName
-    });
-
-    
+    e.preventDefault();
+    console.log('generating...')
+    const result = handleGenerateFlow(state);
     // Validate sender before proceeding
     if (result.error) {
         setSenderError(result.error);
@@ -43,21 +62,13 @@ export default function Gen() {
 
   };
 
-  // Reset form
-  const handleReset = () => {
-    setSenderMpid("BIZZ");
-    setRecipientMpid("SIEM");
-    setFlowName("D0155");
-    setContractRef("BIZZNHMO");
-    setRetrievalMethod("H");
-  };
+  console.log('state', state)
 
-  console.log('sender', senderMpid)
   return (
     <div style={{ maxWidth: 760, margin: "40px auto", fontFamily: "system-ui, Arial, sans-serif" }}>
       <h1 style={{ marginBottom: 8 }}>CSV Generator</h1>
       <p style={{ color: "#555", marginTop: 0 }}>
-        Fill the form and click <strong>Generate CSV</strong>. A pipe‑delimited CSV will download to your device.
+        Select a flow. You can preview its scenario defaults and optionally apply them to the fields.
       </p>
 
       <form
@@ -73,7 +84,37 @@ export default function Gen() {
           textAlign: 'left'
         }}
       >
+        {/* Flow name (version fixed = 001) */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span>Flow name (version is 001)</span>
+          <select value={state.flowName} onChange={(e) => dispatch({ type: "SET_FLOW", value: e.target.value, applyDefaults: !isEditable, })}>
+            {Object.entries(FLOW_PLANS).map(([key,value])=>
+            <option key={key} value={key}>{value.title}</option>
+          )}
+          </select>
+            <small style={{ color: "#666" }}>
+                Determines which file(s) will be generated.
+            </small>
+        </label>
+
         
+        {/* Toggle to apply scenario defaults */}
+        <ToggleSwitch 
+          id="toggle-edit"
+            checked={isEditable}
+            onChange={(checked) => handleToggleEdit(checked)}
+            label="Edit manually (leaveoff to use scenario defaults)"
+        />
+
+          <div style={{borderBottom: '1px solid grey'}}></div>
+        
+        {isEditable ? 
+        <div style={{color: 'green'}}>
+          <h3 style={{marginBottom: 0}}>Edit Mode</h3>
+          <p style={{margin: 0}}>You can now edit the values to use for file generation</p></div> : 
+        <div>
+          <h3 style={{marginBottom: 0}}>Default Values</h3>
+          <p style={{margin: 0}}>The process will use these default values to generate files</p></div>}
         {/* Sender MPID — text input with validation */}
         <label style={{ display: "grid", gap: 6 }}>
         <span>Sender MPID (4 letters)</span>
@@ -81,18 +122,10 @@ export default function Gen() {
             type="text"
             inputMode="none"            // prevents mobile numeric keyboards
             autoCapitalize="characters" // iOS hint
-            value={senderMpid}
+            value={state.senderMpid}
             onChange={(e) => {
             const normalized = normalizeInput(e.target.value).slice(0,4);
-            setSenderMpid(normalized);
-            // Build the auto value: SENDERMPID + NHMO (if sender present)
-            const auto = normalized ? `${normalized}NHMO` : "NHMO";
-            // Only update automatically when the user hasn't edited yet,
-            // OR when the current value still matches the previous auto pattern.
-            // This prevents clobbering the user's manual edits.
-            if (!contractDirty || /^[A-Z]{4}NHMO$/.test(contractRef)) {
-                setContractRef(auto);
-            }
+            dispatch({ type: "SET_FIELD", field: "senderMpid", value: normalized })            
             setSenderError(
                 normalized.length === 0
                 ? "Sender MPID is required."
@@ -107,10 +140,12 @@ export default function Gen() {
             border: senderError ? "1px solid #dc2626" : "1px solid #ccc",
             padding: "8px",
             borderRadius: 6,
+            background: isEditable ? "" : "#f9fafb",
             }}
             aria-invalid={!!senderError}
             aria-describedby="sender-mpid-error"
             required
+            disabled={!isEditable}
         />
         {senderError && (
             <small
@@ -125,25 +160,12 @@ export default function Gen() {
         {/* Recipient MPID */}
         <label style={{ display: "grid", gap: 6 }}>
           <span>Recipient MPID (CHAR4)</span>
-          <select value={recipientMpid} onChange={(e) => setRecipientMpid(e.target.value)}>
+          <select value={state.recipientMpid} disabled={!isEditable} onChange={(e) => dispatch({ type: "SET_FIELD", field: "recipientMpid", value: e.target.value })}>
             <option value="SIEM">SIEM</option>
             <option value="ELEC">ELEC</option>
           </select>
         </label>
 
-        {/* Flow name (version fixed = 001) */}
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Flow name (version is 001)</span>
-          <select value={flowName} onChange={(e) => setFlowName(e.target.value)}>
-            <option value="D0155">D0155</option>
-            <option value="D0155+D0148">D0155 + D0148 (two files)</option>
-            <option value="D0148">D0148 (one file)</option>
-            {/* add more flows here if needed */}
-          </select>
-            <small style={{ color: "#666" }}>
-                Determines which file(s) will be generated.
-            </small>
-        </label>
 
 
         {/* Contract reference */}
@@ -151,21 +173,21 @@ export default function Gen() {
           <span>Contract reference</span>
             <input
                 type="text"
-                value={contractRef}
+                value={state.contractRef}
+                disabled={!isEditable}
                 onChange={(e) => {
-                const normalized = normalizeInput(e.target.value);
-                setContractRef(normalized);
-                setContractDirty(true); // mark as manually edited
+                dispatch({ type: "SET_FIELD", field: "contractRef", value: e.target.value })
                 }}
                 placeholder="e.g., BIZZNHMO"
                 style={{
                 border: "1px solid #ccc",
                     padding: "8px",
                 borderRadius: 6,
+                background: isEditable ? "" : "#f9fafb",
                 }}
             />
             <small style={{ color: "#666" }}>
-                Auto‑fills as <code>{senderMpid || "????"}NHMO</code>. You can edit it; it stays uppercase.
+                Auto‑fills as <code>{state.senderMpid || "????"}NHMO</code>. You can edit it with lowercase letters, numbers and special characters.
             </small>
 
         </label>
@@ -173,7 +195,7 @@ export default function Gen() {
         {/* Retrieval method */}
         <label style={{ display: "grid", gap: 6 }}>
           <span>Retrieval method (CHAR1)</span>
-          <select value={retrievalMethod} onChange={(e) => setRetrievalMethod(e.target.value)}>
+          <select value={state.retrievalMethod} disabled={!isEditable} onChange={(e) => dispatch({ type: "SET_FIELD", field: "retrievalMethod", value: e.target.value })}>
             {/* HH: H, NHH-trad-meter: H, NHH-AMR: R, NHH-smart-meter: S */}
             <option value="H">HH (H)</option>
             <option value="H">NHH - traditional meter (H)</option>
@@ -181,6 +203,7 @@ export default function Gen() {
             <option value="S">NHH - smart meter (S)</option>
           </select>
         </label>
+          <div style={{borderBottom: '1px solid grey', marginBottom: '1rem', marginTop: '1rem'}}></div>
 
         <div style={{ display: "flex", gap: 12 }}>
           <button
@@ -198,7 +221,7 @@ export default function Gen() {
           </button>
           <button
             type="button"
-            onClick={handleReset}
+            onClick={()=> dispatch({ type: "RESET" })}
             style={{
               background: "#e5e7eb",
               color: "#111",
@@ -217,11 +240,8 @@ export default function Gen() {
       <div style={{ marginTop: 20, fontSize: 14, color: "#444" }}>
         <h3 style={{ margin: 0 }}>Preview of generated/used values</h3>
         <ul style={{ marginTop: 8, lineHeight: 1.6 }}>
-          <li>Sender MPID: <code>{senderMpid}</code></li>
-          <li>Recipient MPID: <code>{recipientMpid}</code></li>
-          <li>Registration Effective Date (REGI EFD): <code>{regEffective}</code></li>
-          <li>MOP appointment start date: <code>{mopStart}</code></li>
-          <li>Service reference / level: <code>{serviceRef}</code> / <code>{serviceLevelRef}</code></li>
+          <li>Sender MPID: <code>{state.senderMpid}</code></li>
+          <li>Recipient MPID: <code>{state.recipientMpid}</code></li>
           <li>File Identifier (next): <code>{(() => { const id = nextFileId(FILE_COUNTER_KEY); localStorage.setItem(FILE_COUNTER_KEY, String(Number(localStorage.getItem(FILE_COUNTER_KEY)) - 1)); return id; })()}</code> (CHAR10)</li>
         </ul>
         <p style={{ color: "#666" }}>

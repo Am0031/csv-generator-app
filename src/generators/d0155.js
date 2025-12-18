@@ -4,6 +4,7 @@ import { nextFileId, randomInt, randomPastDateYYYYMMDD, randomRef, address, post
 import { buildCsvText, buildPipeLine } from "../utils/fileprep";
 
 export function generateD0155File({mpan, gspGroup, senderMpid, recipientMpid, contractRef, retrievalMethod }) {
+  const fileRef = 'D0155';
   const regEffective = randomPastDateYYYYMMDD(180, 1500);
   const mopStart = randomPastDateYYYYMMDD(60, 900);
   const serviceRef = randomRef(4);
@@ -11,7 +12,7 @@ export function generateD0155File({mpan, gspGroup, senderMpid, recipientMpid, co
 
   const fileId = nextFileId();
   const nowTs = nowTimestampYYYYMMDDHHmmss();
-  const flowWithVersion = `D0155001`;
+  const flowWithVersion = `${fileRef}001`;
 
   const header = buildPipeLine([
     "ZHV", fileId, flowWithVersion, "X", senderMpid, "M", recipientMpid, nowTs, "", "", "", "", "OPER"
@@ -31,6 +32,6 @@ export function generateD0155File({mpan, gspGroup, senderMpid, recipientMpid, co
   const lines = [header, ...linesBetween, footer];
   const csvText = buildCsvText(lines);
 
-  const filename = `D0155-${mpan}-${nowTs}.csv`;
+  const filename = `${fileRef}-${mpan}-${nowTs}.csv`;
   return { filename, csvText };
 }

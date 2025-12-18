@@ -6,7 +6,6 @@ import Gen from './pages/Gen.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    {/* <App /> */}
-    <Gen />
+    <App />
   </StrictMode>,
 )

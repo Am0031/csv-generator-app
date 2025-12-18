@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+
+.toggle-switch__input:focus + .toggle-switch__label {
+  outline: 2px solid #93c5fd; /* blue-300 */
+   outline-offset: 3px;
+}
