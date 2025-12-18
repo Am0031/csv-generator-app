@@ -13,6 +13,7 @@ const initialState = {
   flowName: "D0155",
   contractRef: "BIZZNHMO",
   retrievalMethod: "H",
+  versionNumber: 1
 };
 function reducer(state, action) {
 switch (action.type) {
@@ -115,6 +116,29 @@ export default function Gen() {
         <div>
           <h3 style={{marginBottom: 0}}>Default Values</h3>
           <p style={{margin: 0}}>The process will use these default values to generate files</p></div>}
+
+        {/* Version number */}
+        <label style={{ display: "grid", gap: 6 }}>
+          <span>Version number</span>
+            <input
+                type="number"
+                value={state.versionNumber}
+                disabled={!isEditable}
+                onChange={(e) => {
+                dispatch({ type: "SET_FIELD", field: "versionNumber", value: e.target.value })
+                }}
+                style={{
+                border: "1px solid #ccc",
+                    padding: "8px",
+                borderRadius: 6,
+                background: isEditable ? "" : "#f9fafb",
+                }}
+            />
+            <small style={{ color: "#666" }}>
+                Version number will combine with document ref, for example: <code>D0155{String(state.versionNumber).padStart(3, "0")}</code>
+            </small>
+
+        </label>
         {/* Sender MPID — text input with validation */}
         <label style={{ display: "grid", gap: 6 }}>
         <span>Sender MPID (4 letters)</span>

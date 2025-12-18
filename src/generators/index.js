@@ -38,7 +38,7 @@ export const GENERATORS = {
 
   
 
-export function handleGenerateFlow({ senderMpid, recipientMpid, contractRef, retrievalMethod, flowName }) {
+export function handleGenerateFlow({ senderMpid, recipientMpid, contractRef, retrievalMethod, flowName, versionNumber }) {
   if (!isValidSenderMpid(senderMpid)) {
     return { error: "Sender MPID must be exactly 4 letters (A–Z)." };
   }
@@ -50,7 +50,7 @@ export function handleGenerateFlow({ senderMpid, recipientMpid, contractRef, ret
   flowsToGenerate.forEach(flow => {
     const generator = GENERATORS[flow];   
     if (!generator) return;
-    const { filename, csvText } = generator({mpan, gspGroup, senderMpid, recipientMpid, contractRef, retrievalMethod });
+    const { filename, csvText } = generator({mpan, gspGroup, senderMpid, recipientMpid, contractRef, retrievalMethod, versionNumber });
     console.log('downloading ', filename)
     downloadTextFile(filename, csvText);
   });
