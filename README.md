@@ -1,16 +1,73 @@
-# React + Vite
+# MPAN Files CSV Generator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+To support test teams when they need MPAN appointment files to upload in Sapphire, this generator will produce the CSV files in the right format based on the preferences selected.
 
-Currently, two official plugins are available:
+More information on the files content and the flows [here](https://siemenscms.atlassian.net/wiki/spaces/Test/pages/1743618050/DTC+Flow+Creator+-+Test+Tool).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Flows
 
-## React Compiler
+### Scenario types 
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+|Scenario ID |Scenario type| Market Indicator|Metering|
+|-------------|--------------|-------------------|--------------------|
+|1|site set up|NHH|AMR|
+|2|site set up|NHH|traditional|
+|3|site set up|HH|HH|
+|4|site set up|NHH|smart|
+|5|site set up|NHH|none (new connection)|
+|6|site set up|HH|none (new connection)|
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Documents needed per scenario
+SC-1
+```javascript
+{
+    title: "Scenario 1 - NHH/AMR", 
+    files: ["D0155", "D0148", "D0150", "D0149", "D0302"]
+}
+```
+SC-2
+```javascript
+{
+    title: "Scenario 2 - NHH/Traditional", 
+    files: ["D0155", "D0148", "D0150", "D0149", "D0302"]
+}
+```
+SC-3
+```javascript
+{
+    title: "Scenario 3 - HH/HH", 
+    files: ["D0155", "D0268", "D0383", "D0384", "D0302"]
+}
+```
+SC-4
+```javascript
+{
+    title: "Scenario 4 - NHH/Smart", 
+    files: ["D0155", "D0148", "D0150", "D0149", "D0302"]
+}
+```
+SC-5
+```javascript
+{
+    title: "Scenario 5 - NHH/None", 
+    files: ["D0155", "D0148", "D0302"]
+}
+```
+SC-6
+```javascript
+{
+    title: "Scenario 6 - HH/None", 
+    files: ["D0155", "D0148", "D0302"]
+}
+```
+
+<!-- 
+  "SC-1": {title: "Scenario 1 - NHH/AMR", files: ["D0155", "D0148", "D0150", "D0149", "D0302"]},
+  "SC-2": {title: "Scenario 2 - NHH/Traditional", files: ["D0155", "D0148", "D0150", "D0149", "D0302"]}, 
+  "SC-3": {title: "Scenario 3 - HH/HH", files: ["D0155", "D0268", "D0383", "D0384", "D0302"]},
+  "SC-4": {title: "Scenario 4 - NHH/Smart", files: ["D0155", "D0148", "D0150", "D0149", "D0302"]},
+  "SC-5": {title: "Scenario 5 - NHH/None", files: ["D0155", "D0148", "D0302"]},
+  "SC-6": {title: "Scenario 6 - HH/None", files: ["D0155", "D0148", "D0302"]},
+  -->
+  
